@@ -1,8 +1,12 @@
 <script lang="ts">
+	import Page2 from './Page2.svelte';
   import { alert } from "@nativescript/core/ui/dialogs";
   import { onDestroy, onMount } from "svelte";
   import * as geolocation from "@nativescript/geolocation";
-  import { CoreTypes } from "@nativescript/core";
+  import { CoreTypes,Frame } from "@nativescript/core";
+  import { Template } from "svelte-native/components";
+  import { navigate } from 'svelte-native';
+    import { SvelteComponentDev } from 'svelte/internal';
 
   CoreTypes.Accuracy;
 
@@ -13,6 +17,7 @@
   let message = "Cesar";
 
   const getLocalization = async () => {
+    consItems = true;
     geolocation.enableLocationRequest().then(() => {
       geolocation
         .getCurrentLocation({
@@ -27,7 +32,8 @@
           _longitude = currentLocation.longitude.toString();
           _altitude = currentLocation.altitude.toString();
           _speed = currentLocation.speed.toString();
-          console.log("My current latitude: ", currentLocation);
+          console.log("My current location: ", currentLocation);
+          consItems = false;
         });
     });
   };
@@ -36,7 +42,7 @@
   let _location;
   onMount(async () => {
     getLocalization();
-   // iniciarlInterval = true;
+    // iniciarlInterval = true;
   });
 
   let interval: any;
@@ -54,24 +60,48 @@
   let nombre = "";
 
   function handleTextChange() {
-  //  console.log("Nuevo valor:", nombre);
+    //  console.log("Nuevo valor:", nombre);
   }
 
   let data: any;
 
-  const getItems = async () => {
-    try{
+  let _Items: ListItems = [];
+
+  interface ListItems extends Array<objectListItems> {}
+
+  interface Sedes {
+    ind: string;
+    sede: string;
+  }
+
+  interface objectListItems {
+    sede: string;
+  }
+
+  const getItems = async (): Promise<ListItems> => {
     console.log("Consultando datos");
     const response = await fetch(
       "https://app.iedeoccidente.com/getasignacion.php"
     );
-    const data=await response.json();
-    console.log("datos Consultados")
-    return data;
-    }catch(error){
-      console.log(error)
-    }
+    const data: Sedes[] = await response.json();
+    console.log("datos Consultados");
+    const _data: ListItems = data.map((d: Sedes) => {
+      return {
+        sede: d.sede,
+      };
+    });
+    return _data;
   };
+
+  let consItems = false;
+
+  const onBusyChanged = (): void => {};
+
+  
+
+  const goPage2 = ()=>{
+  //  navigate({page:Page2})
+  }
 </script>
 
 <page>
@@ -84,16 +114,23 @@
       bind:text={_longitude}
       on:textChange={handleTextChange}
     />
+    <activityIndicator busy={consItems} />
     <textField hint="" bind:text={_altitude} on:textChange={handleTextChange} />
     <textField hint="" bind:text={_speed} on:textChange={handleTextChange} />
     <button
       text="Aceptar"
       on:tap={async () => {
-        await alert(`Your date is`);
+        await alert({
+          title: "Consultar Sedes",
+          message: "Precione aceptar para realizar la consulta",
+          okButtonText: "Aceptar",
+        });
         console.log("Alert dialog closed.");
-        data = await getItems();
-        data=[...data.map(d=>d.sede)]
-        console.log(data);
+        consItems = true;
+        _Items = [];
+        _Items = await getItems();
+        consItems = false;
+        console.log(_Items);
       }}
     />
     <label class="info">
@@ -102,7 +139,16 @@
         <span text=" Hola {message}" />
       </formattedString>
     </label>
-    <listView items={data} />
+    <activityIndicator busy={consItems} />
+    <listView items={_Items.map((d) => d.sede)} separatorColor="blue">
+      <Template let:item key="odd">
+        <label text={item} />
+      </Template>
+    </listView>
+    <button
+      text="Siguiente"
+      on:tap={goPage2}
+    />
   </flexboxLayout>
 </page>
 
@@ -113,7 +159,7 @@
 
   .info {
     font-size: 20;
-    horizontal-align: center;
+    text-align: center;
     vertical-align: center;
   }
 </style>
