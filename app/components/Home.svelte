@@ -5,9 +5,8 @@
   import * as geolocation from "@nativescript/geolocation";
   import { CoreTypes,Frame } from "@nativescript/core";
   import { Template } from "svelte-native/components";
-  import { navigate } from 'svelte-native';
-    import { SvelteComponentDev } from 'svelte/internal';
-
+  import { ScrollView, ScrollEventData } from '@nativescript/core'
+  import * as nav from "../Nav";
   CoreTypes.Accuracy;
 
   let _latitude: string = "";
@@ -100,7 +99,7 @@
   
 
   const goPage2 = ()=>{
-  //  navigate({page:Page2})
+    nav.goto(Page2,null);
   }
 </script>
 
@@ -140,11 +139,13 @@
       </formattedString>
     </label>
     <activityIndicator busy={consItems} />
+   
     <listView items={_Items.map((d) => d.sede)} separatorColor="blue">
       <Template let:item key="odd">
         <label text={item} />
       </Template>
     </listView>
+  
     <button
       text="Siguiente"
       on:tap={goPage2}
