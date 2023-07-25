@@ -3,6 +3,11 @@
   "main": "app/app.ts",
   "version": "1.0.0",
   "private": true,
+  "browser": {
+    "@app/*": "./*",
+    "src":"./app/components"
+  },
+  
   "dependencies": {
     "@nativescript/core": "~8.5.0",
     "@nativescript/geolocation": "^8.2.0",
